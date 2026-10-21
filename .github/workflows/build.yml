@@ -36,10 +36,10 @@ jobs:
       run: |
         cd share\ci
         
-        :: Микро-патч: заменяем проблемный вызов os.environ['OS'] на строку 'Windows_NT' прямо в коде автора
-        python -c "import pathlib; p = pathlib.Path('config.py'); t = p.read_text(encoding='utf-8'); t = t.replace('os.environ.get(\'OS\')', '\'Windows_NT\'').replace('os.environ[\'OS\']', '\'Windows_NT\''); p.write_text(t, encoding='utf-8')"
+        :: Регулярное выражение: находит строку app_version с любыми кавычками/пробелами и заменяет на "pass"
+        python -c "import pathlib, re; p = pathlib.Path('config.py'); t = p.read_text(encoding='utf-8'); t = re.sub(r'app_version\s*\+=\s*\{[^}]*\}\[[^\]]*\]', 'pass', t); p.write_text(t, encoding='utf-8')"
         
-        :: Запуск оригинальной логики автора
+        :: Запуск оригинальной логики компиляции автора
         python config.py
         python build.py
         
