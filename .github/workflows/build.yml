@@ -1,4 +1,4 @@
-name: Build ScreenTranslator (Author Logic)
+name: build.yml
 
 # Сборку можно запустить вручную во вкладке Actions
 on:
