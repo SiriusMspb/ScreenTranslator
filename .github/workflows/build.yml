@@ -32,12 +32,13 @@ jobs:
         arch: 'win64_msvc2019_64'
 
     - name: Make a release
-      shell: cmd
+      shell: bash
+      env:
+        OS: Windows_NT  # Намертво прописываем системную переменную для Python
       run: |
-        cd share\ci
-        python -c "import os; f=open('config.py','r'); c=f.read(); f.close(); c=c.replace(\"app_version += {'linux': '', 'macos': '-experimental', 'Windows_NT': ''}\", \"app_version += {'linux': '', 'macos': '-experimental', 'Windows_NT': ''}; print('Патч успешно применен')\"); c=c.replace(\"os.environ['OS']\", \"'Windows_NT'\"); f=open('config.py','w'); f.write(c); f.close()"
-        python config.py
-        python build.py
+        cd share/ci
+        python3 config.py
+        python3 build.py
         
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
