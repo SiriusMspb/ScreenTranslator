@@ -39,6 +39,9 @@ jobs:
           echo. > share\translations\screentranslator_he.qm
           echo. > share\translations\screentranslator_ru.qm
           echo. > hunspell\hunspell.hxx
+          
+          powershell -Command "(Get-Content screen-translator.pro) -replace 'src/correct/corrector.h', '' -replace 'src/correct/corrector.cpp', '' -replace 'src/correct/correctorworker.h', '' -replace 'src/correct/correctorworker.cpp', '' -replace 'src/correct/hunspellcorrector.h', '' -replace 'src/correct/hunspellcorrector.cpp', '' -replace 'src/correct', '' | Set-Content screen-translator.pro"
+          
           qmake screen-translator.pro CONFIG+=release
           nmake
           windeployqt --release release\screen-translator.exe
