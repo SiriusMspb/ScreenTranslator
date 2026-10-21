@@ -41,10 +41,13 @@ jobs:
           
           powershell -Command "$p = 'share\ci\common.py'; (Get-Content $p) -replace 'raise RuntimeError.*No archiver.*', 'return' | Set-Content $p"
           
-          echo # Выжигаем содержимое get_qt.py и подсовываем пустые заглушки для всех возможных функций
           powershell -Command "echo 'def run(): pass' | Set-Content share\ci\get_qt.py"
           powershell -Command "echo 'def install(): pass' | Add-Content share\ci\get_qt.py"
           powershell -Command "echo 'if __name__ == \"__main__\": pass' | Add-Content share\ci\get_qt.py"
+          
+          powershell -Command "echo 'def run(): pass' | Set-Content share\ci\get_qt_ssl.py"
+          powershell -Command "echo 'def install(): pass' | Add-Content share\ci\get_qt_ssl.py"
+          powershell -Command "echo 'if __name__ == \"__main__\": pass' | Add-Content share\ci\get_qt_ssl.py"
           
           python ./share/ci/release.py
 
