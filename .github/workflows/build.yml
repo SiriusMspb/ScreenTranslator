@@ -45,6 +45,8 @@ jobs:
           
           python -c "p = 'share/ci/build.py'; c = open(p, 'r').read(); c = c.replace('c.apply_cmd_env(env_cmd)', 'pass'); open(p, 'w').write(c)"
           
+          python -c "p = 'screen-translator.pro'; c = open(p, 'r').read(); c = c.replace('src/correct/hunspellcorrector.h', '').replace('src/correct/hunspellcorrector.cpp', '').replace('-lhunspell', ''); open(p, 'w').write(c)"
+          
           echo def run(): pass > share\ci\get_qt.py
           echo def install(): pass >> share\ci\get_qt.py
           echo def run(): pass > share\ci\get_qt_ssl.py
