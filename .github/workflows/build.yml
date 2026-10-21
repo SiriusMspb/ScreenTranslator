@@ -31,17 +31,17 @@ jobs:
           curl -L -o tesseract-deps.zip https://github.com || echo "No prebuilt deps found"
           touch deps/lib/tesseract.lib deps/lib/leptonica.lib deps/lib/hunspell.lib
 
-      # Полностью вырезаем блоки TRANSLATIONS и Hunspell из файла проекта, чтобы nmake их не искал
+      # Убираем некорректные комментарии CMD, чистим файлы проекта и принудительно зануляем переводы в Makefile
       - name: Patch Project File and Build
         shell: cmd
         run: |
-          echo "Patching out Hunspell and Translations..."
           powershell -Command "(Get-Content screen-translator.pro) -replace 'src/correct/hunspellcorrector.h', '' -replace 'src/correct/hunspellcorrector.cpp', '' -replace '-lhunspell', '' | Set-Content screen-translator.pro"
-          
-          # Намертво вырезаем любые упоминания TRANSLATIONS, чтобы qmake не генерировал правила для .qm файлов
           powershell -Command "(Get-Content screen-translator.pro) -replace 'TRANSLATIONS.*', '' -replace '.*screentranslator_.*', '' | Set-Content screen-translator.pro"
           
           qmake screen-translator.pro CONFIG+=release
+          
+          powershell -Command "if (Test-Path Makefile.Release) { (Get-Content Makefile.Release) -replace 'share\\translations\\screentranslator_he.qm', '' | Set-Content Makefile.Release }"
+          
           nmake
           windeployqt --release release\screen-translator.exe
           
