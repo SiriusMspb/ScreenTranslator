@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-windows:
-    runs-on: windows-2022
+    runs-on: windows-2019
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -17,22 +17,25 @@ jobs:
         with:
           version: '5.15.2'
           arch: 'win64_msvc2019_64'
-          modules: 'qtwebengine'
 
       - name: Setup MSVC Compiler
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64
 
-      - name: Configure, Build and Deploy
-        shell: cmd
+      - name: Configure CMake
         run: |
-          qmake screen-translator.pro CONFIG+=release
-          nmake sub-src
-          windeployqt --release release\screen-translator.exe
-          
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles" ..
+
+      - name: Build Project
+        run: |
+          cd build
+          nmake
+
       - name: Upload Finished App
         uses: actions/upload-artifact@v4
         with:
           name: ScreenTranslator-Portable
-          path: release/
+          path: build/dist/
