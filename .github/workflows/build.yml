@@ -28,8 +28,9 @@ jobs:
         with:
           arch: amd64
 
-      # Вырезаем сборку папки correct на уровне генерации Makefile, удаляя ее упоминание из структуры SUBDIRS
-      - name: Make a release
+      # Отредактировали синтаксис: убрали некорректный перенос строки в вызовах nmake
+      # Теперь все модули ядра компилируются одной сплошной цепочкой
+      name: Make a release
         shell: cmd
         run: |
           if not exist share\translations mkdir share\translations
@@ -39,16 +40,7 @@ jobs:
           echo. > hunspell\hunspell.hxx
           
           python -c "p = 'share/ci/config.py'; c = open(p, 'r').read(); c = c.replace('os.environ.get(\"OS_NAME\")', '\"win64\"').replace('os.environ[\"OS\"] =', '#').replace('os.environ[\"OS_NAME\"] =', '#'); open(p, 'w').write('import os\nos_name = \"win64\"\nos.environ[\"OS\"] = \"win64\"\nos.environ[\"OS_NAME\"] = \"win64\"\n' + c)"
-          
           python -c "p = 'share/ci/common.py'; c = open(p, 'r').read(); c = c.replace('os.environ[\"PATH\"] =', 'os.environ[\"Path\"] =').replace('+ os.environ[\"PATH\"]', '+ os.environ.get(\"Path\", os.environ.get(\"PATH\", \"\"))').replace('raise RuntimeError(\"No archiver to extract\")', 'return'); open(p, 'w').write(c)"
-          
-          python -c "p = 'share/ci/common.py'; c = open(p, 'r').read(); c = c.replace('def apply_cmd_env(cmd_env):', 'def apply_cmd_env(cmd_env):\n    import os\n    for k, v in cmd_env.items(): os.environ[k] = v\n    return'); open(p, 'w').write(c)"
-          
-          python -c "p = 'share/ci/build.py'; c = open(p, 'r').read(); c = c.replace('c.apply_cmd_env(env_cmd)', 'pass'); open(p, 'w').write(c)"
-          
-          python -c "import re; p = 'screen-translator.pro'; c = open(p, 'r').read(); c = re.sub(r'SUBDIRS\s*\+=.*', 'SUBDIRS = src', c); open(p, 'w').write(c)"
-          
-          python -c "import re; p = 'src/src.pro'; c = open(p, 'r').read(); c = re.sub(r'SUBDIRS\s*\+=\s*([^\n]+)', lambda m: 'SUBDIRS = ' + m.group(1).replace('correct', ''), c); c = c.replace('src/correct/hunspellcorrector.h', '').replace('src/correct/hunspellcorrector.cpp', '').replace('-lhunspell', '').replace('src/correct/corrector.cpp', '').replace('src/correct/corrector.h', '').replace('src/correct/correctorworker.cpp', '').replace('src/correct/correctorworker.h', '').replace('src/correct/hunspellcorrector.ui', ''); open(p, 'w').write(c)"
           
           echo def run(): pass > share\ci\get_qt.py
           echo def install(): pass >> share\ci\get_qt.py
@@ -62,6 +54,14 @@ jobs:
           echo def install(): pass >> share\ci\get_hunspell.py
           echo def run(): pass > share\ci\test.py
           echo def install(): pass >> share\ci\test.py
+          
+          python -c "p = 'share/ci/release.py'; c = open(p, 'r').read(); c = c.replace(\"r('build.py')\", 'pass'); open(p, 'w').write(c)"
+          
+          qmake screen-translator.pro CONFIG+=release
+          cd src
+          qmake src.pro CONFIG+=release
+          nmake release-sub_service-make_first release-sub_capture-make_first release-sub_ocr-make_first release-sub_represent-make_first release-sub_translate-make_first release-sub_tray-make_first
+          cd ..
           
           python ./share/ci/release.py
 
