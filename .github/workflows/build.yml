@@ -30,10 +30,6 @@ jobs:
 
       - name: Make a release
         shell: cmd
-        env:
-          ComSpec: C:\Windows\system32\cmd.exe
-          SystemRoot: C:\Windows
-          WINDIR: C:\Windows
         run: |
           if not exist share\translations mkdir share\translations
           if not exist hunspell mkdir hunspell
@@ -41,11 +37,12 @@ jobs:
           if not exist share\translations\screentranslator_ru.qm echo "" > share\translations\screentranslator_ru.qm
           echo "" > hunspell\hunspell.hxx
           
-          powershell -Command "$p = 'share\ci\config.py'; $c = Get-Content $p; $c = $c -replace 'os\.environ\.get\([^)]+\)', '\"win64\"'; $c = $c -replace 'os\.environ\[[^\]]+\]', '\"win64\"'; $c = 'import os' + [Environment]::NewLine + 'os_name = \"win64\"' + [Environment]::NewLine + 'os.environ = dict(OS=\"win64\", OS_NAME=\"win64\")' + [Environment]::NewLine + ($c -join [Environment]::NewLine); Set-Content $p $c"
+          powershell -Command "\$p = 'share\ci\common.py'; c = Get-Content p; c = c -replace 'sub\.run\([^)]+\)', 'typeval'; c = c -replace 'def apply_cmd_env\(cmd_env\):.*', 'def apply_cmd_env(cmd_env):`n    import os`n    for k, v in cmd_env.items(): os.environ[k] = v`n    return'; Set-Content p c"
           
-          powershell -Command "$p = 'share\ci\common.py'; $c = Get-Content $p; $c = $c -replace 'os\.environ\[''PATH''\]\s*=\s*', 'os.environ[''Path''] = '; Set-Content $p $c"
-          powershell -Command "$p = 'share\ci\common.py'; $c = Get-Content $p; $c = $c -replace '\+\s*os\.environ\[''PATH''\]', '+ os.environ.get(''Path'', os.environ.get(''PATH'', ''''))'; Set-Content $p $c"
-          powershell -Command "$p = 'share\ci\common.py'; (Get-Content $p) -replace 'raise RuntimeError.*No archiver.*', 'return' | Set-Content $p"
+          powershell -Command "\$p = 'share\ci\config.py'; c = Get-Content p; c = c -replace 'os\.environ\.get\([^)]+\)', '\"win64\"'; c = c -replace 'os\.environ\[[^\]]+\]', '\"win64\"'; \$c = 'import os' + [Environment]::NewLine + 'os_name = \"win64\"' + [Environment]::NewLine + 'os.environ = dict(OS=\"win64\", OS_NAME=\"win64\")' + [Environment]::NewLine + (\$c -join [Environment]::NewLine); Set-Content p c"
+          powershell -Command "\$p = 'share\ci\common.py'; c = Get-Content p; c = c -replace 'os\.environ\[''PATH''\]\s*=\s*', 'os.environ[''Path''] = '; Set-Content p c"
+          powershell -Command "\$p = 'share\ci\common.py'; c = Get-Content p; c = c -replace '\+\s*os\.environ\[''PATH''\]', '+ os.environ.get(''Path'', os.environ.get(''PATH'', ''''))'; Set-Content p c"
+          powershell -Command "\$p = 'share\ci\common.py'; (Get-Content p) -replace 'raise RuntimeError.*No archiver.*', 'return' | Set-Content p"
           
           powershell -Command "echo 'def run(): pass' | Set-Content share\ci\get_qt.py"
           powershell -Command "echo 'def install(): pass' | Add-Content share\ci\get_qt.py"
