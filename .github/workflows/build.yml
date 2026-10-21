@@ -35,6 +35,7 @@ jobs:
       shell: cmd
       run: |
         cd share\ci
+        set Windows_NT=Windows_NT
         python config.py
         python build.py
         
