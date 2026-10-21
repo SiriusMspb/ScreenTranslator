@@ -28,9 +28,7 @@ jobs:
         with:
           arch: amd64
 
-      # Отредактировали синтаксис: убрали некорректный перенос строки в вызовах nmake
-      # Теперь все модули ядра компилируются одной сплошной цепочкой
-      name: Make a release
+      - name: Make a release
         shell: cmd
         run: |
           if not exist share\translations mkdir share\translations
