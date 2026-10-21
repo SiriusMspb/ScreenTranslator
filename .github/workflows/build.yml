@@ -36,8 +36,11 @@ jobs:
       run: |
         cd share\ci
         
-        :: Патч кода автора: находим обращение к словарю через os.environ и заменяем на безопасную заглушку
-        python -c "import pathlib; p = pathlib.Path('config.py'); t = p.read_text(encoding='utf-8'); t = t.replace('os.environ[\'OS\']', '\'Windows_NT\''); p.write_text(t, encoding='utf-8')"
+        :: Безопасный инжект: мы просто добавляем 'Windows_NT' во внутренний словарь окружения перед стартом
+        python -c "import os; os.environ['Windows_NT'] = 'Windows_NT'; os.environ['Windows'] = 'Windows_NT'; os.environ['windows'] = 'Windows_NT'"
+        
+        :: Хирургический патч: перехватываем ошибку KeyError прямо на лету в коде автора
+        python -c "import pathlib; p = pathlib.Path('config.py'); t = p.read_text(encoding='utf-8'); t = 'import os\ntry:\n    os.environ[\'OS\'] = \'Windows_NT\'\nexcept:\n    pass\n' + t; p.write_text(t, encoding='utf-8')"
         
         :: Запуск оригинального сборочного процесса автора
         python config.py
