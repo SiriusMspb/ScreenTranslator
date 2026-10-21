@@ -17,10 +17,11 @@ jobs:
       - name: Configure and Build
         shell: cmd
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          set PATH=C:\tools\Qt\5.15.2\msvc2019_64\bin;%PATH%
           qmake screen-translator.pro
           nmake
-
+          
       - name: Upload Finished App
         uses: actions/upload-artifact@v4
         with:
