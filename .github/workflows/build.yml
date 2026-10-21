@@ -24,15 +24,18 @@ jobs:
         with:
           arch: amd64
 
-      # Создаем заглушки для переводов и для библиотеки Hunspell, чтобы nmake не падал
+      # Полностью вырезаем упоминания модуля правок и орфографии из всех файлов конфигурации проекта
       - name: Configure, Build and Deploy
         shell: cmd
         run: |
           if not exist share\translations mkdir share\translations
           echo "" > share\translations\screentranslator_he.qm
           echo "" > share\translations\screentranslator_ru.qm
-          if not exist hunspell mkdir hunspell
-          echo "" > hunspell\hunspell.hxx
+          
+          powershell -Command "(Get-Content src\src.pro) -replace 'SUBDIRS \+= correct', '' | Set-Content src\src.pro"
+          powershell -Command "(Get-Content screen-translator.pro) -replace 'SUBDIRS \+= src', 'SUBDIRS = src' | Set-Content screen-translator.pro"
+          powershell -Command "(Get-Content screen-translator.pro) -replace 'src.depends = .*', '' | Set-Content screen-translator.pro"
+          
           qmake screen-translator.pro CONFIG+=release
           nmake
           windeployqt --release release\screen-translator.exe
