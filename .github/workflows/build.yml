@@ -28,7 +28,6 @@ jobs:
         with:
           arch: amd64
 
-      # Применяем точные исправления, опираясь на оригинальную логику автора
       - name: Make a release
         shell: cmd
         run: |
@@ -38,13 +37,9 @@ jobs:
           if not exist share\translations\screentranslator_ru.qm echo "" > share\translations\screentranslator_ru.qm
           echo "" > hunspell\hunspell.hxx
           
-          # 1. Точечно чиним оригинальный файл config.py, принудительно заставляя его вернуть "win64"
           python -c "p = 'share/ci/config.py'; c = open(p, 'r').read(); c = c.replace('os.environ.get(\"OS_NAME\")', '\"win64\"').replace('os.environ[\"OS\"]', '\"win64\"'); open(p, 'w').write('import os\nos_name = \"win64\"\n' + c)"
-          
-          # 2. Чиним регистрацию путей в common.py под регистр Windows Server 2022
           python -c "p = 'share/ci/common.py'; c = open(p, 'r').read(); c = c.replace('os.environ[\"PATH\"] =', 'os.environ[\"Path\"] =').replace('+ os.environ[\"PATH\"]', '+ os.environ.get(\"Path\", os.environ.get(\"PATH\", \"\"))').replace('raise RuntimeError(\"No archiver to extract\")', 'return'); open(p, 'w').write(c)"
           
-          # 3. Глушим внешние сетевые загрузки старых либ, которые ломают билд по 404
           echo def run(): pass > share\ci\get_qt.py
           echo def install(): pass >> share\ci\get_qt.py
           echo def run(): pass > share\ci\get_qt_ssl.py
@@ -58,22 +53,18 @@ jobs:
           echo def run(): pass > share\ci\test.py
           echo def install(): pass >> share\ci\test.py
           
-          # 4. Отключаем вызовы сторонних скриптов деплоя внутри release.py, выполним сборку стандартным QMake
           python -c "p = 'share/ci/release.py'; c = open(p, 'r').read(); c = c.replace(\"r('build.py')\", 'pass').replace(\"r('windeploy.py')\", 'pass'); open(p, 'w').write(c)"
           
-          # 5. Запускаем генерацию Makefile с явным флагом no_hunspell, который теперь корректно отработает во всех подпроектах
-          qmake screen-translator.pro CONFIG+=release CONFIG+=no_hunspell
-          
-          # Очищаем старые объектные файлы, если они зависли в системе
           python -c "import os; [os.remove(os.path.join('src/release', f)) for f in os.listdir('src/release') if f.endswith('.obj')] if os.path.exists('src/release') else None"
+          python -c "import os, shutil; shutil.rmtree('src/correct', ignore_errors=True)"
           
-          # Запускаем сборку
+          python -c "p = 'src/src.pro'; c = open(p, 'r').read(); c = c.replace('SUBDIRS += correct', '').replace('    correct \\', '').replace('    correct', ''); open(p, 'w').write(c)"
+          python -c "p = 'src/src.pri'; c = open(p, 'r').read(); c = c.replace('include(correct/correct.pri)', ''); open(p, 'w').write(c)"
+          
+          qmake screen-translator.pro CONFIG+=release CONFIG+=no_hunspell
           nmake release
-          
-          # Собираем все необходимые Qt-зависимости (.dll) вокруг готового файла
           windeployqt --release src\release\screen-translator.exe
 
-      # Выгружаем в артефакты исключительно собранный .exe и все сгенерированные библиотеки
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
