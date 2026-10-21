@@ -39,6 +39,7 @@ jobs:
           
           powershell -Command "$p = 'share\ci\config.py'; $c = Get-Content $p; $c = $c -replace 'os\.environ\.get\([^)]+\)', '\"win64\"'; $c = $c -replace 'os\.environ\[[^\]]+\]', '\"win64\"'; $c = 'import os' + [Environment]::NewLine + 'os_name = \"win64\"' + [Environment]::NewLine + 'os.environ = dict(OS=\"win64\", OS_NAME=\"win64\")' + [Environment]::NewLine + ($c -join [Environment]::NewLine); Set-Content $p $c"
           
+          set PATH=C:\Program Files\7-Zip;%PATH%
           python ./share/ci/release.py
 
       - name: Upload build artifact
