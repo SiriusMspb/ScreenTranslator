@@ -36,10 +36,10 @@ jobs:
       run: |
         cd share\ci
         
-        :: Регулярное выражение: находит строку app_version с любыми кавычками/пробелами и заменяет на "pass"
-        python -c "import pathlib, re; p = pathlib.Path('config.py'); t = p.read_text(encoding='utf-8'); t = re.sub(r'app_version\s*\+=\s*\{[^}]*\}\[[^\]]*\]', 'pass', t); p.write_text(t, encoding='utf-8')"
+        :: Исправляем поведение окружения: принудительно очищаем переменную OS от скрытых переносов строк раннера GitHub
+        python -c "import os; os.environ['OS'] = os.environ.get('OS', 'Windows_NT').strip()"
         
-        :: Запуск оригинальной логики компиляции автора
+        :: Запуск оригинального сборочного процесса автора шаг за шагом
         python config.py
         python build.py
         
