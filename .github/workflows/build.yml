@@ -31,7 +31,7 @@ jobs:
           curl -L -o tesseract-deps.zip https://github.com || echo "No prebuilt deps found"
           touch deps/lib/tesseract.lib deps/lib/leptonica.lib deps/lib/hunspell.lib
 
-      # Убираем некорректные комментарии CMD, чистим файлы проекта и принудительно зануляем переводы в Makefile
+      # Генерируем Makefile и полностью вырезаем из него любые упоминания .qm файлов
       - name: Patch Project File and Build
         shell: cmd
         run: |
@@ -40,7 +40,9 @@ jobs:
           
           qmake screen-translator.pro CONFIG+=release
           
-          powershell -Command "if (Test-Path Makefile.Release) { (Get-Content Makefile.Release) -replace 'share\\translations\\screentranslator_he.qm', '' | Set-Content Makefile.Release }"
+          powershell -Command "if (Test-Path Makefile) { (Get-Content Makefile) -notmatch '\.qm' | Set-Content Makefile }"
+          powershell -Command "if (Test-Path Makefile.Release) { (Get-Content Makefile.Release) -notmatch '\.qm' | Set-Content Makefile.Release }"
+          powershell -Command "if (Test-Path Makefile.Debug) { (Get-Content Makefile.Debug) -notmatch '\.qm' | Set-Content Makefile.Debug }"
           
           nmake
           windeployqt --release release\screen-translator.exe
