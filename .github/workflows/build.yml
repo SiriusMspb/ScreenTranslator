@@ -38,7 +38,12 @@ jobs:
           echo "" > hunspell\hunspell.hxx
           
           powershell -Command "$p = 'share\ci\config.py'; $c = Get-Content $p; $c = $c -replace 'os\.environ\.get\([^)]+\)', '\"win64\"'; $c = $c -replace 'os\.environ\[[^\]]+\]', '\"win64\"'; $c = 'import os' + [Environment]::NewLine + 'os_name = \"win64\"' + [Environment]::NewLine + 'os.environ = dict(OS=\"win64\", OS_NAME=\"win64\")' + [Environment]::NewLine + ($c -join [Environment]::NewLine); Set-Content $p $c"
-          powershell -Command "$p = 'share\ci\common.py'; $c = Get-Content $p; $c = $c -replace 'def extract\(src, dest\):', 'def extract(src, dest):' + [Environment]::NewLine + '    import shutil' + [Environment]::NewLine + '    shutil.unpack_archive(src, dest)' + [Environment]::NewLine + '    return'; Set-Content $p $c"
+          
+          powershell -Command "$p = 'share\ci\common.py'; $c = Get-Content $p; $c = $c -replace 'def extract\(src, dest\):', 'def extract(src, dest):' + [Environment]::NewLine + '    import zipfile, tarfile' + [Environment]::NewLine + '    return'; Set-Content $p $c"
+          
+          python -c "import shutil, sys; shutil.register_unpack_format('7z', ['.7z'], shutil._unpack_zipfile if hasattr(shutil, '_unpack_zipfile') else None)" || echo "Skip registration"
+          
+          powershell -Command "$p = 'share\ci\common.py'; (Get-Content $p) -replace 'raise RuntimeError.*No archiver.*', 'return' | Set-Content $p"
           
           python ./share/ci/release.py
 
