@@ -29,17 +29,20 @@ jobs:
           arch: amd64
 
       - name: Make a release
-        shell: bash
+        shell: cmd
+        env:
+          OS_NAME: win64
         run: |
-          mkdir -p share/translations hunspell
-          echo "" > share/translations/screentranslator_he.qm
-          echo "" > share/translations/screentranslator_ru.qm
-          echo "" > hunspell/hunspell.hxx
-          
-          export OS_NAME="win64"
+          if not exist share\translations mkdir share\translations
+          if not exist hunspell mkdir hunspell
+          echo "" > share\translations\screentranslator_he.qm
+          echo "" > share\translations\screentranslator_ru.qm
+          echo "" > hunspell\hunspell.hxx
           
           python ./share/ci/release.py
-          echo "artifact=$(python ./share/ci/release.py artifact_name)" >> $GITHUB_ENV
+          
+          for /f "delims=" %%i in ('python ./share/ci/release.py artifact_name') do set ARTIFACT_NAME=%%i
+          echo artifact=%ARTIFACT_NAME% >> %GITHUB_ENV%
 
       - name: Upload build artifact
         if: env.artifact != ''
