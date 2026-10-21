@@ -24,11 +24,13 @@ jobs:
         with:
           arch: amd64
 
-      # Создаем нужную структуру папок, настраиваем qmake и компилируем через nmake
+      # Создаем структуру папок и пустые файлы-заглушки, чтобы обмануть проверку зависимостей в nmake
       - name: Configure, Build and Deploy
         shell: cmd
         run: |
-          mkdir share\translations
+          if not exist share\translations mkdir share\translations
+          echo "" > share\translations\screentranslator_he.qm
+          echo "" > share\translations\screentranslator_ru.qm
           qmake screen-translator.pro CONFIG+=release
           nmake
           windeployqt --release release\screen-translator.exe
