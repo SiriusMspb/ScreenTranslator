@@ -28,6 +28,7 @@ jobs:
         with:
           arch: amd64
 
+      # Физически зануляем и очищаем файлы конфигурации модуля correct, полностью выжигая его из qmake
       - name: Make a release
         shell: cmd
         run: |
@@ -54,18 +55,20 @@ jobs:
           echo def install(): pass >> share\ci\test.py
           
           python -c "p = 'share/ci/release.py'; c = open(p, 'r').read(); c = c.replace(\"r('build.py')\", 'pass').replace(\"r('windeploy.py')\", 'pass'); open(p, 'w').write(c)"
-          python -c "import re; p = 'src/src.pro'; c = open(p, 'r').read(); c = re.sub(r'SUBDIRS\s*\+=\s*correct', '', c); c = c.replace('correct', ''); open(p, 'w').write(c)"
           
-          mkdir app_output
-          qmake screen-translator.pro CONFIG+=release CONFIG+=no_hunspell DESTDIR=../app_output TARGET=screen-translator
+          echo # Затираем файлы конфигурации модуля правок до пустоты
+          echo. > src\correct\correct.pro
+          echo. > src\correct\correct.pri
+          
+          qmake screen-translator.pro CONFIG+=release CONFIG+=no_hunspell
           nmake release
           
-          windeployqt --release app_output\screen-translator.exe
+          windeployqt --release src\release\screen-translator.exe
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ScreenTranslator-Ready-Win64
           path: |
-            app_output/screen-translator.exe
-            app_output/*.dll
+            src/release/screen-translator.exe
+            src/release/*.dll
