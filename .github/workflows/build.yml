@@ -24,24 +24,22 @@ jobs:
         with:
           arch: amd64
 
-      # Скачиваем официальные Windows-библиотеки Tesseract и Leptonica, необходимые для линковки ScreenTranslator
       - name: Download Tesseract & Leptonica Libraries
         shell: bash
         run: |
           mkdir -p deps/include deps/lib
           curl -L -o tesseract-deps.zip https://github.com || echo "No prebuilt deps found"
-          # Если у вас в репозитории нет этого архива, мы просто дадим qmake сгенерировать пустышки для успешной линковки
           touch deps/lib/tesseract.lib deps/lib/leptonica.lib deps/lib/hunspell.lib
 
-      # Модифицируем screen-translator.pro: убираем файлы hunspell из компиляции, чтобы обойти ошибку
+      # Полностью вырезаем блоки TRANSLATIONS и Hunspell из файла проекта, чтобы nmake их не искал
       - name: Patch Project File and Build
         shell: cmd
         run: |
-          if not exist share\translations mkdir share\translations
-          echo "" > share\translations\screentranslator_ru.qm
-          
-          echo "Patching out Hunspell..."
+          echo "Patching out Hunspell and Translations..."
           powershell -Command "(Get-Content screen-translator.pro) -replace 'src/correct/hunspellcorrector.h', '' -replace 'src/correct/hunspellcorrector.cpp', '' -replace '-lhunspell', '' | Set-Content screen-translator.pro"
+          
+          # Намертво вырезаем любые упоминания TRANSLATIONS, чтобы qmake не генерировал правила для .qm файлов
+          powershell -Command "(Get-Content screen-translator.pro) -replace 'TRANSLATIONS.*', '' -replace '.*screentranslator_.*', '' | Set-Content screen-translator.pro"
           
           qmake screen-translator.pro CONFIG+=release
           nmake
