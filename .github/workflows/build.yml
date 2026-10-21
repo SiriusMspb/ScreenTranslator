@@ -1,4 +1,4 @@
-name: Build ScreenTranslator
+name: build
 
 on:
   push:
