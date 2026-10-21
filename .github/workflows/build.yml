@@ -1,48 +1,100 @@
-name: Build win64
+name: App build
 
-on:
-  push:
-    branches: [ master ]
-  workflow_dispatch:
+on: [push]
 
 jobs:
-  build-windows:
-    runs-on: windows-2019
-
+  release:
+    name: Create release
+    if: contains(github.ref, '/tags/')
+    runs-on: ubuntu-18.04
     steps:
-    - name: Run actions/checkout@v4
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: false
+          prerelease: false
 
-    - name: Setup python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.9'
+      - name: Store release url
+        run: echo "${{ steps.create_release.outputs.upload_url }}" > ./release_upload_url
 
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v2
+      - name: Upload release url
+        uses: actions/upload-artifact@v1
+        with:
+          path: ./release_upload_url
+          name: release_upload_url
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v3
-      with:
-        version: '5.15.2'
-        host: 'windows'
-        target: 'desktop'
-        arch: 'win64_msvc2019_64'
+  build:
+    name: Build ${{ matrix.config.name }}${{ matrix.config.tag }}
+    runs-on: ${{ matrix.config.os }}
+    env:
+      OS: ${{ matrix.config.name }}
+      MSVC_VERSION: C:/Program Files/Microsoft Visual Studio/2022/Enterprise
+    strategy:
+      matrix:
+        config:
+          - { name: "win64", os: windows-latest }
+          - { name: "win32", os: windows-latest }
+          - { name: "linux", os: ubuntu-18.04 }
+          # - { name: "macos", os: macos-latest }
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 10
 
-    - name: Make a release
-      shell: cmd
-      run: |
-        cd share\ci
-        python -c "import pathlib; p = pathlib.Path('config.py'); t = p.read_text(encoding='utf-8'); t = 'import os\nos.environ[\'OS\'] = \'Windows_NT\'\n' + t; p.write_text(t, encoding='utf-8')"
-        python config.py
-        python build.py
-        
-    - name: Upload build artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ScreenTranslator-Fixed-Win64
-        path: |
-          share/ci/release/screen-translator.exe
-          share/ci/release/*.dll
+      - name: Setup python
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.x"
+
+      - name: Install system libs
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install libgl1-mesa-dev libxkbcommon-x11-0 libxcb-*
+          echo "QMAKE_FLAGS=QMAKE_CXX=g++-10 QMAKE_CC=gcc-10 QMAKE_LINK=g++-10" >> $GITHUB_ENV
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: deps
+          key: ${{ env.OS }}-${{ hashFiles('./share/ci/*.py') }}
+
+      - name: Make a release
+        shell: bash
+        run: |
+          python ./share/ci/release.py
+          echo "artifact=`python ./share/ci/release.py artifact_name`" >> $GITHUB_ENV
+
+      - name: Upload build artifact
+        if: env.artifact != ''
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ env.artifact }}
+          path: ./${{ env.artifact }}
+
+      - name: Download release url
+        if: contains(github.ref, '/tags/')
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: release_upload_url
+          path: ./
+
+      - name: Set release env
+        if: contains(github.ref, '/tags/')
+        shell: bash
+        run: echo "upload_url=`cat ./release_upload_url`" >> $GITHUB_ENV
+
+      - name: Upload release artifacts
+        if: contains(github.ref, '/tags/')
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ env.upload_url }}
+          asset_path: ./${{ env.artifact }}
+          asset_name: ${{ env.artifact }}
+          asset_content_type: application/zip
