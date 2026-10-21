@@ -24,11 +24,12 @@ jobs:
         with:
           arch: amd64
 
-      # Чистый и надежный билд: настраиваем qmake и компилируем через nmake без захода в подпапки
+      # Создаем нужную структуру папок, настраиваем qmake и компилируем через nmake
       - name: Configure, Build and Deploy
         shell: cmd
         run: |
-          qmake screen-translator.pro CONFIG+=release CONFIG+=no_translations
+          mkdir share\translations
+          qmake screen-translator.pro CONFIG+=release
           nmake
           windeployqt --release release\screen-translator.exe
           
