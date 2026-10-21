@@ -7,7 +7,8 @@ on:
 
 jobs:
   build-windows:
-    runs-on: windows-latest
+    # Возвращаем родную среду автора со старой Visual Studio 2019
+    runs-on: windows-2019
 
     steps:
     - name: Run actions/checkout@v4
@@ -31,15 +32,11 @@ jobs:
         target: 'desktop'
         arch: 'win64_msvc2019_64'
 
+    # Принудительно используем стандартную командную строку Windows (cmd), чтобы не было зависаний в очереди
     - name: Make a release
       shell: cmd
       run: |
         cd share\ci
-        
-        :: Исправляем поведение окружения: принудительно очищаем переменную OS от скрытых переносов строк раннера GitHub
-        python -c "import os; os.environ['OS'] = os.environ.get('OS', 'Windows_NT').strip()"
-        
-        :: Запуск оригинального сборочного процесса автора шаг за шагом
         python config.py
         python build.py
         
