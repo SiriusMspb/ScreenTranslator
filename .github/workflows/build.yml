@@ -40,13 +40,9 @@ jobs:
           powershell -Command "$p = 'share\ci\config.py'; $c = Get-Content $p; $c = $c -replace 'os\.environ\.get\([^)]+\)', '\"win64\"'; $c = $c -replace 'os\.environ\[[^\]]+\]', '\"win64\"'; $c = 'import os' + [Environment]::NewLine + 'os_name = \"win64\"' + [Environment]::NewLine + 'os.environ = dict(OS=\"win64\", OS_NAME=\"win64\")' + [Environment]::NewLine + ($c -join [Environment]::NewLine); Set-Content $p $c"
           
           python ./share/ci/release.py
-          
-          for /f "delims=" %%i in ('python ./share/ci/release.py artifact_name') do set ARTIFACT_NAME=%%i
-          echo artifact=%ARTIFACT_NAME% >> %GITHUB_ENV%
 
       - name: Upload build artifact
-        if: env.artifact != ''
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.artifact }}
-          path: ./${{ env.artifact }}
+          name: ScreenTranslator-Fixed-Win64
+          path: "**/ScreenTranslator*.zip"
