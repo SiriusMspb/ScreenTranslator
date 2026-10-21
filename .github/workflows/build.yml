@@ -24,7 +24,6 @@ jobs:
         with:
           arch: amd64
 
-      # Выполняем сборку напрямую через консоль Windows, игнорируя падающий Python
       - name: Native QMake and NMake Build
         shell: cmd
         run: |
@@ -34,7 +33,19 @@ jobs:
           echo. > share\translations\screentranslator_ru.qm
           echo. > hunspell\hunspell.hxx
           
-          powershell -Command "(Get-Content screen-translator.pro) -replace 'src/correct/corrector.h', '' -replace 'src/correct/corrector.cpp', '' -replace 'src/correct/correctorworker.h', '' -replace 'src/correct/correctorworker.cpp', '' -replace 'src/correct/hunspellcorrector.h', '' -replace 'src/correct/hunspellcorrector.cpp', '' -replace 'src/correct', '' | Set-Content screen-translator.pro"
+          if not exist src\correct mkdir src\correct
+          echo #pragma once > src\correct\corrector.h
+          echo #pragma once > src\correct\correctorworker.h
+          echo #pragma once > src\correct\hunspellcorrector.h
+          echo. > src\correct\corrector.cpp
+          echo. > src\correct\correctorworker.cpp
+          echo. > src\correct\hunspellcorrector.cpp
+          
+          echo. > corrector.h
+          echo. > correctorworker.h
+          echo. > hunspellcorrector.h
+          
+          powershell -Command "(Get-Content screen-translator.pro) -replace 'src/correct/hunspellcorrector.ui', '' | Set-Content screen-translator.pro"
           
           qmake screen-translator.pro CONFIG+=release CONFIG+=no_hunspell
           nmake
