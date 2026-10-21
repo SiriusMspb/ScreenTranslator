@@ -53,6 +53,10 @@ jobs:
           powershell -Command "echo 'def install(): pass' | Add-Content share\ci\get_leptonica.py"
           powershell -Command "echo 'if __name__ == \"__main__\": pass' | Add-Content share\ci\get_leptonica.py"
           
+          powershell -Command "echo 'def run(): pass' | Set-Content share\ci\get_tesseract.py"
+          powershell -Command "echo 'def install(): pass' | Add-Content share\ci\get_tesseract.py"
+          powershell -Command "echo 'if __name__ == \"__main__\": pass' | Add-Content share\ci\get_tesseract.py"
+          
           python ./share/ci/release.py
 
       - name: Upload build artifact
