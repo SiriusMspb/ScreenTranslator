@@ -1,39 +1,41 @@
-name: build
-
+name: App build
 on:
   push:
-    branches: [ "master", "main" ]
-  pull_request:
-    branches: [ "master", "main" ]
+  workflow_dispatch:
 
 jobs:
   build-windows:
-    runs-on: windows-2019
-
+    runs-on: windows-2022
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v3
-      with:
-        version: '5.15.2'
-        host: 'windows'
-        target: 'desktop'
-        arch: 'win64_msvc2019_64'
+      # Гарантированно ставит Qt 5.15.2 и сам прописывает пути к qmake
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '5.15.2'
+          arch: 'win64_msvc2019_64'
 
-    - name: Setup MSVC Compiler
-      uses: ilammy/msvc-dev-cmd@v1
+      # Автоматически находит правильный vcvars64.bat для Visual Studio 2022
+      - name: Setup MSVC Compiler
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
 
-    - name: Configure CMake
-      run: |
-        mkdir build
-        cd build
-        cmake -DCMAKE_BUILD_TYPE=Release ..
-
-    - name: Build Project
-      run: |
-        cd build
-        cmake --build . --config Release
+      # Теперь и qmake, и nmake точно будут доступны в консоли
+      - name: Configure and Build
+        shell: cmd
+        run: |
+          qmake screen-translator.pro
+          nmake
+          
+      - name: Upload Finished App
+        uses: actions/upload-artifact@v4
+        with:
+          name: ScreenTranslator-Fixed
+          path: |
+            **/*.exe
+            **/*.dll
