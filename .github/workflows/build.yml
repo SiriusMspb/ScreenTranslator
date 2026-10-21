@@ -35,6 +35,9 @@ jobs:
           echo "" > share/translations/screentranslator_he.qm
           echo "" > share/translations/screentranslator_ru.qm
           echo "" > hunspell/hunspell.hxx
+          
+          export OS_NAME="win64"
+          
           python ./share/ci/release.py
           echo "artifact=$(python ./share/ci/release.py artifact_name)" >> $GITHUB_ENV
 
