@@ -22,7 +22,7 @@ jobs:
 
       - name: Install Qt 5.15.2
         run: |
-          aqt install-qt windows desktop 5.15.2 win64_mingw81 -m qtwebengine
+          aqt install-qt windows desktop 5.15.2 win64_mingw81
 
       - name: Configure CMake
         run: |
