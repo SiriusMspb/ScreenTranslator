@@ -56,16 +56,16 @@ jobs:
           python -c "p = 'share/ci/release.py'; c = open(p, 'r').read(); c = c.replace(\"r('build.py')\", 'pass').replace(\"r('windeploy.py')\", 'pass'); open(p, 'w').write(c)"
           python -c "import re; p = 'src/src.pro'; c = open(p, 'r').read(); c = re.sub(r'SUBDIRS\s*\+=\s*correct', '', c); c = c.replace('correct', ''); open(p, 'w').write(c)"
           
-          qmake screen-translator.pro CONFIG+=release CONFIG+=no_hunspell
+          mkdir app_output
+          qmake screen-translator.pro CONFIG+=release CONFIG+=no_hunspell DESTDIR=../app_output TARGET=screen-translator
           nmake release
-          windeployqt --release release\screen-translator.exe
+          
+          windeployqt --release app_output\screen-translator.exe
 
-      # Собираем в артефакты только саму готовую программу и ее библиотеки, отсекая мусор .obj
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ScreenTranslator-Ready-Win64
           path: |
-            release/*.exe
-            release/*.dll
-            release/plugins/
+            app_output/screen-translator.exe
+            app_output/*.dll
