@@ -37,7 +37,7 @@ jobs:
           if not exist share\translations\screentranslator_ru.qm echo "" > share\translations\screentranslator_ru.qm
           echo "" > hunspell\hunspell.hxx
           
-          python -c "p = 'share/ci/config.py'; c = open(p, 'r').read(); c = c.replace('os.environ.get(\"OS_NAME\")', '\"win64\"').replace('os.environ[\"OS\"]', '\"win64\"'); open(p, 'w').write('import os\nos_name = \"win64\"\n' + c)"
+          python -c "p = 'share/ci/config.py'; c = open(p, 'r').read(); c = c.replace('os.environ.get(\"OS_NAME\")', '\"win64\"').replace('os.environ[\"OS\"] =', '#').replace('os.environ[\"OS_NAME\"] =', '#'); open(p, 'w').write('import os\nos_name = \"win64\"\n' + c)"
           python -c "p = 'share/ci/common.py'; c = open(p, 'r').read(); c = c.replace('os.environ[\"PATH\"] =', 'os.environ[\"Path\"] =').replace('+ os.environ[\"PATH\"]', '+ os.environ.get(\"Path\", os.environ.get(\"PATH\", \"\"))').replace('raise RuntimeError(\"No archiver to extract\")', 'return'); open(p, 'w').write(c)"
           
           echo def run(): pass > share\ci\get_qt.py
@@ -55,13 +55,13 @@ jobs:
           
           python -c "p = 'share/ci/release.py'; c = open(p, 'r').read(); c = c.replace(\"r('build.py')\", 'pass').replace(\"r('windeploy.py')\", 'pass'); open(p, 'w').write(c)"
           
-          python -c "import os; [os.remove(os.path.join('src/release', f)) for f in os.listdir('src/release') if f.endswith('.obj')] if os.path.exists('src/release') else None"
-          python -c "import os, shutil; shutil.rmtree('src/correct', ignore_errors=True)"
-          
-          python -c "p = 'src/src.pro'; c = open(p, 'r').read(); c = c.replace('SUBDIRS += correct', '').replace('    correct \\', '').replace('    correct', ''); open(p, 'w').write(c)"
-          python -c "p = 'src/src.pri'; c = open(p, 'r').read(); c = c.replace('include(correct/correct.pri)', ''); open(p, 'w').write(c)"
+          python -c "p = 'src/src.pro'; c = open(p, 'r').read(); c = c.replace('SUBDIRS += correct', '').replace('    correct \\\\', '').replace('    correct', ''); open(p, 'w').write(c)"
+          python -c "p = 'screen-translator.pro'; c = open(p, 'r').read(); c = c.replace('SUBDIRS += src/correct', '').replace('src/correct', ''); open(p, 'w').write(c)"
           
           qmake screen-translator.pro CONFIG+=release CONFIG+=no_hunspell
+          
+          python -c "import os; [os.remove(os.path.join('src/release', f)) for f in os.listdir('src/release') if f.endswith('.obj')] if os.path.exists('src/release') else None"
+          
           nmake release
           windeployqt --release src\release\screen-translator.exe
 
