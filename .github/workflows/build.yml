@@ -30,8 +30,6 @@ jobs:
 
       - name: Make a release
         shell: cmd
-        env:
-          OS_NAME: win64
         run: |
           if not exist share\translations mkdir share\translations
           if not exist hunspell mkdir hunspell
@@ -39,7 +37,7 @@ jobs:
           if not exist share\translations\screentranslator_ru.qm echo "" > share\translations\screentranslator_ru.qm
           echo "" > hunspell\hunspell.hxx
           
-          powershell -Command "(Get-Content share\ci\config.py) -replace 'os.environ.get.*OS.*', '\"win64\"' -replace 'os.environ\[.*OS.*\]', '\"win64\"' | Set-Content share\ci\config.py"
+          powershell -Command "(Get-Content share\ci\config.py) -replace 'os.environ.get\(\''OS_NAME\''\)', '\"win64\"' -replace 'os.environ\[\''OS\''\]', '\"win64\"' | Set-Content share\ci\config.py"
           
           python ./share/ci/release.py
           
