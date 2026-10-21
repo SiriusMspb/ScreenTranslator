@@ -15,9 +15,6 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Add MSBuild and MSVC to PATH
-      uses: microsoft/setup-msbuild@v2
-
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
       with:
@@ -26,11 +23,20 @@ jobs:
         target: 'desktop'
         arch: 'win64_msvc2019_64'
 
-    - name: Run QMake and Compile
+    # Этот готовый шаг автоматически и без багов включает компилятор MSVC и nmake в систему
+    - name: Set up MSVC Developer Command Prompt
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: amd64
+
+    - name: Run QMake
       shell: cmd
       run: |
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
         qmake screen-translator.pro CONFIG+=release
+
+    - name: Run NMake Compile
+      shell: cmd
+      run: |
         nmake
         
     - name: Upload build artifact
