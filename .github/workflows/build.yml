@@ -12,24 +12,26 @@ jobs:
         with:
           submodules: recursive
 
+      # Добавили установку модуля webengine, без которого qmake выдавал ошибку
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
           version: '5.15.2'
           arch: 'win64_msvc2019_64'
+          modules: 'qtwebengine'
 
       - name: Setup MSVC Compiler
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64
 
-      # Компилируем проект и сразу собираем все переносимые DLL зависимости
+      # Исправили конфигурацию qmake под релиз и синтаксис nmake
       - name: Configure, Build and Deploy
         shell: cmd
         run: |
-          qmake screen-translator.pro
-          nmake release
-          windeployqt --release release/screen-translator.exe
+          qmake screen-translator.pro CONFIG+=release
+          nmake
+          windeployqt --release release\screen-translator.exe
           
       - name: Upload Finished App
         uses: actions/upload-artifact@v4
