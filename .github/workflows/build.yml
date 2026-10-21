@@ -10,22 +10,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Qt and MinGW
-        uses: davidmace/setup-qt@v1
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
         with:
-          qt-version: '5.15.2'
-          qt-modules: 'qtwebengine'
+          python-version: '3.10'
+          cache: 'pip'
 
-      - name: Configure and Build
-        shell: cmd
+      - name: Install aqtinstall
         run: |
-          qmake screen-translator.pro
-          mingw32-make
-          
+          python -m pip install --upgrade pip
+          pip install aqtinstall
+
+      - name: Install Qt 5.15.2
+        run: |
+          aqt install-qt windows desktop 5.15.2 win64_mingw81 -m qtwebengine
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G "MinGW Makefiles" -DCMAKE_PREFIX_PATH="C:/localized/Qt/5.15.2/mingw81_64"
+
+      - name: Build Project
+        run: |
+          cmake --build build --config Release
+
       - name: Upload Finished App
         uses: actions/upload-artifact@v4
         with:
           name: ScreenTranslator-Fixed
           path: |
-            *.exe
-            *.dll
+            build/*.exe
+            build/*.dll
