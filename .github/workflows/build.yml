@@ -32,13 +32,12 @@ jobs:
         arch: 'win64_msvc2019_64'
 
     - name: Make a release
-      shell: bash
-      env:
-        OS: Windows_NT  # Намертво прописываем системную переменную для Python
+      shell: cmd
       run: |
-        cd share/ci
-        python3 config.py
-        python3 build.py
+        cd share\ci
+        python -c "import pathlib; p = pathlib.Path('config.py'); text = p.read_text(encoding='utf-8'); text = text.replace('os.environ[\'OS\']', '\'Windows_NT\''); p.write_text(text, encoding='utf-8')"
+        python config.py
+        python build.py
         
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
