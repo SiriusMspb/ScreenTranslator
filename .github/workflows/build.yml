@@ -24,14 +24,16 @@ jobs:
         with:
           arch: amd64
 
-      # Добавили CONFIG+=no_hunspell, чтобы отключить отсутствующую библиотеку проверки орфографии
+      # Создаем заглушки для переводов и для библиотеки Hunspell, чтобы nmake не падал
       - name: Configure, Build and Deploy
         shell: cmd
         run: |
           if not exist share\translations mkdir share\translations
           echo "" > share\translations\screentranslator_he.qm
           echo "" > share\translations\screentranslator_ru.qm
-          qmake screen-translator.pro CONFIG+=release CONFIG+=no_hunspell
+          if not exist hunspell mkdir hunspell
+          echo "" > hunspell\hunspell.hxx
+          qmake screen-translator.pro CONFIG+=release
           nmake
           windeployqt --release release\screen-translator.exe
           
