@@ -32,15 +32,15 @@ jobs:
         shell: bash
         run: |
           mkdir -p share/translations hunspell
-          echo. > share/translations/screentranslator_he.qm
-          echo. > share/translations/screentranslator_ru.qm
-          echo. > hunspell/hunspell.hxx
+          echo "" > share/translations/screentranslator_he.qm
+          echo "" > share/translations/screentranslator_ru.qm
+          echo "" > hunspell/hunspell.hxx
           python ./share/ci/release.py
-          echo "artifact=`python ./share/ci/release.py artifact_name`" >> \$GITHUB_ENV
+          echo "artifact=$(python ./share/ci/release.py artifact_name)" >> $GITHUB_ENV
 
       - name: Upload build artifact
         if: env.artifact != ''
         uses: actions/upload-artifact@v4
         with:
-          name: \${{ env.artifact }}
-          path: ./\${{ env.artifact }}
+          name: ${{ env.artifact }}
+          path: ./${{ env.artifact }}
