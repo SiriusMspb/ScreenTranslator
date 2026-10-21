@@ -28,6 +28,7 @@ jobs:
         with:
           arch: amd64
 
+      # Выжигаем любые упоминания модуля правок во всех .pro и .pri файлах проекта, чтобы qmake о них забыл
       - name: Make a release
         shell: cmd
         run: |
@@ -56,10 +57,12 @@ jobs:
           python -c "p = 'share/ci/release.py'; c = open(p, 'r').read(); c = c.replace(\"r('build.py')\", 'pass').replace(\"r('windeploy.py')\", 'pass'); open(p, 'w').write(c)"
           
           python -c "p = 'src/src.pro'; c = open(p, 'r').read(); c = c.replace('SUBDIRS += correct', '').replace('    correct \\', '').replace('    correct', ''); open(p, 'w').write(c)"
+          python -c "p = 'screen-translator.pro'; c = open(p, 'r').read(); c = c.replace('SUBDIRS += src/correct', '').replace('src/correct', ''); open(p, 'w').write(c)"
+          python -c "p = 'src/src.pri'; c = open(p, 'r').read(); c = c.replace('include(correct/correct.pri)', '#').replace('correct/correct.pri', ''); open(p, 'w').write(c)"
           
           qmake screen-translator.pro CONFIG+=release CONFIG+=no_hunspell
           
-          python -c "import os; [os.remove(os.path.join('src/release', f)) for f in os.listdir('src/release') if f.endswith('.obj')] if os.path.exists('src/release') else None"
+          python -c "import os, shutil; [os.remove(os.path.join('src/release', f)) for f in os.listdir('src/release') if f.endswith('.obj')] if os.path.exists('src/release') else None; shutil.rmtree('src/correct', ignore_errors=True)"
           
           nmake release
           
