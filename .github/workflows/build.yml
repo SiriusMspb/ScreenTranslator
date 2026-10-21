@@ -28,7 +28,7 @@ jobs:
         with:
           arch: amd64
 
-      # Исправили экранирование символов перевода строки и кавычек в блоках Python
+      # Исправляем сборку: передаем родной флаг CONFIG+=no_hunspell и жестко создаем структуру папок для RCC
       - name: Make a release
         shell: cmd
         run: |
@@ -39,7 +39,6 @@ jobs:
           echo. > hunspell\hunspell.hxx
           
           python -c "p = 'share/ci/config.py'; c = open(p, 'r').read(); c = c.replace('os.environ.get(\"OS_NAME\")', '\"win64\"').replace('os.environ[\"OS\"] =', '#').replace('os.environ[\"OS_NAME\"] =', '#'); open(p, 'w').write('import os\nos_name = \"win64\"\nos.environ[\"OS\"] = \"win64\"\nos.environ[\"OS_NAME\"] = \"win64\"\n' + c)"
-          
           python -c "p = 'share/ci/common.py'; c = open(p, 'r').read(); c = c.replace('os.environ[\"PATH\"] =', 'os.environ[\"Path\"] =').replace('+ os.environ[\"PATH\"]', '+ os.environ.get(\"Path\", os.environ.get(\"PATH\", \"\"))').replace('raise RuntimeError(\"No archiver to extract\")', 'return'); open(p, 'w').write(c)"
           
           echo def run(): pass > share\ci\get_qt.py
@@ -57,9 +56,7 @@ jobs:
           
           python -c "p = 'share/ci/release.py'; c = open(p, 'r').read(); c = c.replace(\"r('build.py')\", 'pass').replace(\"r('windeploy.py')\", 'pass'); open(p, 'w').write(c)"
           
-          python -c "import re; p = 'src/src.pro'; c = open(p, 'r').read(); c = re.sub(r'SUBDIRS\s*\+=\s*correct', '', c); c = c.replace('correct', ''); open(p, 'w').write(c)"
-          
-          qmake screen-translator.pro CONFIG+=release
+          qmake screen-translator.pro CONFIG+=release CONFIG+=no_hunspell
           nmake release
           
           windeployqt --release release\screen-translator.exe
@@ -70,4 +67,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ScreenTranslator-Fixed-Win64
-          path: "**/*.zip"
+          path: "release/"
