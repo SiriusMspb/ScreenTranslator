@@ -32,13 +32,13 @@ ResultWidget::ResultWidget(Manager &manager, Representer &representer,
   setFrameShape(QFrame::StyledPanel);
   setFrameShadow(QFrame::Plain);
 
-  recognized_->setAlignment(Qt::AlignCenter);
+  recognized_->setAlignment(Qt::AlignLeft | Qt::AlignTop);
   recognized_->setWordWrap(true);
 
   separator_->setFixedHeight(1);
   separator_->setAutoFillBackground(true);
 
-  translated_->setAlignment(Qt::AlignCenter);
+  translated_->setAlignment(Qt::AlignLeft | Qt::AlignTop);
   translated_->setWordWrap(true);
 
   {
