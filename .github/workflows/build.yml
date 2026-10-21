@@ -15,12 +15,7 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Setup python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.9'
-
-    - name: Add MSBuild to PATH
+    - name: Add MSBuild and MSVC to PATH
       uses: microsoft/setup-msbuild@v2
 
     - name: Install Qt
@@ -31,18 +26,17 @@ jobs:
         target: 'desktop'
         arch: 'win64_msvc2019_64'
 
-    - name: Make a release
+    - name: Run QMake and Compile
       shell: cmd
       run: |
-        cd share\ci
-        python -c "import pathlib; p = pathlib.Path('config.py'); text = p.read_text(encoding='utf-8'); text = text.replace('os.environ[\'OS\']', '\'Windows_NT\''); p.write_text(text, encoding='utf-8')"
-        python config.py
-        python build.py
+        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        qmake screen-translator.pro CONFIG+=release
+        nmake
         
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
       with:
         name: ScreenTranslator-Fixed-Win64
         path: |
-          share/ci/release/screen-translator.exe
-          share/ci/release/*.dll
+          release/screen-translator.exe
+          release/*.dll
