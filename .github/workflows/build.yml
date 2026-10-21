@@ -28,7 +28,6 @@ jobs:
         with:
           arch: amd64
 
-      # Добавили экранирование переноса строки (\n -> \\n), чтобы консоль Windows CMD не ломала код автозамены на Python
       - name: Make a release
         shell: cmd
         run: |
@@ -42,7 +41,9 @@ jobs:
           
           python -c "p = 'share/ci/common.py'; c = open(p, 'r').read(); c = c.replace('os.environ[\"PATH\"] =', 'os.environ[\"Path\"] =').replace('+ os.environ[\"PATH\"]', '+ os.environ.get(\"Path\", os.environ.get(\"PATH\", \"\"))').replace('raise RuntimeError(\"No archiver to extract\")', 'return'); open(p, 'w').write(c)"
           
-          python -c "p = 'share/ci/common.py'; c = open(p, 'r').read(); c = c.replace('def apply_cmd_env(cmd_env):', 'def apply_cmd_env(cmd_env):\n    import os\n    for k, v in cmd_env.items(): os.environ[k] = v\n    return #'); open(p, 'w').write(c)"
+          python -c "p = 'share/ci/common.py'; c = open(p, 'r').read(); c = c.replace('def apply_cmd_env(cmd_env):', 'def apply_cmd_env(cmd_env):\n    import os\n    for k, v in cmd_env.items(): os.environ[k] = v\n    return'); open(p, 'w').write(c)"
+          
+          python -c "p = 'share/ci/build.py'; c = open(p, 'r').read(); c = c.replace('c.apply_cmd_env(env_cmd)', 'pass'); open(p, 'w').write(c)"
           
           echo def run(): pass > share\ci\get_qt.py
           echo def install(): pass >> share\ci\get_qt.py
