@@ -28,44 +28,44 @@ jobs:
         with:
           arch: amd64
 
+      # Физически заменяем файлы через базовые команды эхо, полностью исключив powershell и его ошибки кавычек
       - name: Make a release
         shell: cmd
         run: |
           if not exist share\translations mkdir share\translations
           if not exist hunspell mkdir hunspell
-          echo "" > share\translations\screentranslator_he.qm
-          if not exist share\translations\screentranslator_ru.qm echo "" > share\translations\screentranslator_ru.qm
-          echo "" > hunspell\hunspell.hxx
+          echo. > share\translations\screentranslator_he.qm
+          echo. > share\translations\screentranslator_ru.qm
+          echo. > hunspell\hunspell.hxx
           
-          powershell -Command "\$p = 'share\ci\common.py'; c = Get-Content p; c = c -replace 'def apply_cmd_env\(cmd_env\):.*', 'def apply_cmd_env(cmd_env):`n    import os`n    for k, v in cmd_env.items(): os.environ[k] = v`n    return'; Set-Content p c"
-          powershell -Command "\$p = 'share\ci\config.py'; c = Get-Content p; c = c -replace 'os\.environ\.get\([^)]+\)', '\"win64\"'; c = c -replace 'os\.environ\[[^\]]+\]', '\"win64\"'; \$c2 = 'import os' + [Environment]::NewLine + 'os_name = \"win64\"' + [Environment]::NewLine + 'os.environ = dict(OS=\"win64\", OS_NAME=\"win64\")' + [Environment]::NewLine + (\$c -join [Environment]::NewLine); Set-Content p c2"
-          powershell -Command "\$p = 'share\ci\common.py'; c = Get-Content p; c = c -replace 'os\.environ\[''PATH''\]\s*=\s*', 'os.environ[''Path''] = '; Set-Content p c"
-          powershell -Command "\$p = 'share\ci\common.py'; c = Get-Content p; c = c -replace '\+\s*os\.environ\[''PATH''\]', '+ os.environ.get(''Path'', os.environ.get(''PATH'', ''''))'; Set-Content p c"
-          powershell -Command "\$p = 'share\ci\common.py'; (Get-Content p) -replace 'raise RuntimeError.*No archiver.*', 'return' | Set-Content p"
+          echo import os > share\ci\config.py
+          echo os_name = "win64" >> share\ci\config.py
+          echo app_version = "3.3.0" >> share\ci\config.py
+          echo pr_dir = "." >> share\ci\config.py
+          echo qt_dir = "." >> share\ci\config.py
+          echo msvc_dir = "." >> share\ci\config.py
           
-          powershell -Command "echo 'def run(): pass' | Set-Content share\ci\get_qt.py"
-          powershell -Command "echo 'def install(): pass' | Add-Content share\ci\get_qt.py"
-          powershell -Command "echo 'if __name__ == \"__main__\": pass' | Add-Content share\ci\get_qt.py"
+          echo def apply_cmd_env(cmd_env): > share\ci\common.py
+          echo     import os >> share\ci\common.py
+          echo     for k, v in cmd_env.items(): os.environ[k] = v >> share\ci\common.py
+          echo def add_to_path(entry): >> share\ci\common.py
+          echo     import os >> share\ci\common.py
+          echo     os.environ["Path"] = entry + ";" + os.environ.get("Path", "") >> share\ci\common.py
+          echo def extract(src, dest): >> share\ci\common.py
+          echo     return >> share\ci\common.py
           
-          powershell -Command "echo 'def run(): pass' | Set-Content share\ci\get_qt_ssl.py"
-          powershell -Command "echo 'def install(): pass' | Add-Content share\ci\get_qt_ssl.py"
-          powershell -Command "echo 'if __name__ == \"__main__\": pass' | Add-Content share\ci\get_qt_ssl.py"
-          
-          powershell -Command "echo 'def run(): pass' | Set-Content share\ci\get_leptonica.py"
-          powershell -Command "echo 'def install(): pass' | Add-Content share\ci\get_leptonica.py"
-          powershell -Command "echo 'if __name__ == \"__main__\": pass' | Add-Content share\ci\get_leptonica.py"
-          
-          powershell -Command "echo 'def run(): pass' | Set-Content share\ci\get_tesseract.py"
-          powershell -Command "echo 'def install(): pass' | Add-Content share\ci\get_tesseract.py"
-          powershell -Command "echo 'if __name__ == \"__main__\": pass' | Add-Content share\ci\get_tesseract.py"
-          
-          powershell -Command "echo 'def run(): pass' | Set-Content share\ci\get_hunspell.py"
-          powershell -Command "echo 'def install(): pass' | Add-Content share\ci\get_hunspell.py"
-          powershell -Command "echo 'if __name__ == \"__main__\": pass' | Add-Content share\ci\get_hunspell.py"
-          
-          powershell -Command "echo 'def run(): pass' | Set-Content share\ci\test.py"
-          powershell -Command "echo 'def install(): pass' | Add-Content share\ci\test.py"
-          powershell -Command "echo 'if __name__ == \"__main__\": pass' | Add-Content share\ci\test.py"
+          echo def run(): pass > share\ci\get_qt.py
+          echo def install(): pass >> share\ci\get_qt.py
+          echo def run(): pass > share\ci\get_qt_ssl.py
+          echo def install(): pass >> share\ci\get_qt_ssl.py
+          echo def run(): pass > share\ci\get_leptonica.py
+          echo def install(): pass >> share\ci\get_leptonica.py
+          echo def run(): pass > share\ci\get_tesseract.py
+          echo def install(): pass >> share\ci\get_tesseract.py
+          echo def run(): pass > share\ci\get_hunspell.py
+          echo def install(): pass >> share\ci\get_hunspell.py
+          echo def run(): pass > share\ci\test.py
+          echo def install(): pass >> share\ci\test.py
           
           python ./share/ci/release.py
 
