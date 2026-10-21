@@ -12,30 +12,27 @@ jobs:
         with:
           submodules: recursive
 
-      # Гарантированно ставит Qt 5.15.2 и сам прописывает пути к qmake
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
           version: '5.15.2'
           arch: 'win64_msvc2019_64'
 
-      # Автоматически находит правильный vcvars64.bat для Visual Studio 2022
       - name: Setup MSVC Compiler
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64
 
-      # Теперь и qmake, и nmake точно будут доступны в консоли
-      - name: Configure and Build
+      # Компилируем проект и сразу собираем все переносимые DLL зависимости
+      - name: Configure, Build and Deploy
         shell: cmd
         run: |
           qmake screen-translator.pro
-          nmake
+          nmake release
+          windeployqt --release release/screen-translator.exe
           
       - name: Upload Finished App
         uses: actions/upload-artifact@v4
         with:
-          name: ScreenTranslator-Fixed
-          path: |
-            **/*.exe
-            **/*.dll
+          name: ScreenTranslator-Portable
+          path: release/
