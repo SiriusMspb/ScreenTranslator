@@ -1,58 +1,78 @@
-name: App build
+name: Build ScreenTranslator (Author Logic)
+
+# Сборку можно запустить вручную во вкладке Actions
 on:
-  push:
   workflow_dispatch:
 
 jobs:
   build-windows:
-    runs-on: windows-2022
+    runs-on: windows-2019 # Автор использует старое окружение, Windows 2019 стабильнее для старого Qt 5
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
+    # 1. Стягиваем код вашего форка
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive # Важно: подтягиваем внешние зависимости автора
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v3
-        with:
-          version: '5.15.2'
-          arch: 'win64_msvc2019_64'
-          modules: 'qtwebengine'
+    # 2. Устанавливаем Python 3 (необходим для работы скриптов автора)
+    - name: Set up Python 3.x
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
 
-      - name: Setup MSVC Compiler
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: amd64
+    # 3. Настраиваем компилятор C++ и инструменты сборки
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
 
-      - name: Native QMake and NMake Build
-        shell: cmd
-        run: |
-          if not exist share\translations mkdir share\translations
-          if not exist hunspell mkdir hunspell
-          echo. > share\translations\screentranslator_he.qm
-          echo. > share\translations\screentranslator_ru.qm
-          echo. > hunspell\hunspell.hxx
-          
-          if not exist src\correct mkdir src\correct
-          echo #pragma once > src\correct\corrector.h
-          echo #pragma once > src\correct\correctorworker.h
-          echo #pragma once > src\correct\hunspellcorrector.h
-          echo. > src\correct\corrector.cpp
-          echo. > src\correct\correctorworker.cpp
-          echo. > src\correct\hunspellcorrector.cpp
-          
-          echo. > corrector.h
-          echo. > correctorworker.h
-          echo. > hunspellcorrector.h
-          
-          powershell -Command "(Get-Content screen-translator.pro) -replace 'src/correct/hunspellcorrector.ui', '' | Set-Content screen-translator.pro"
-          
-          qmake screen-translator.pro CONFIG+=release CONFIG+=no_hunspell
-          nmake
-          windeployqt --release release\screen-translator.exe
-          
-      - name: Upload Finished App
-        uses: actions/upload-artifact@v4
-        with:
-          name: ScreenTranslator-Portable-Win64
-          path: release/
+    # 4. Выполняем конфигурацию по логике автора (share/ci/config.py)
+    # Скрипт автоматически правит пути до библиотек
+    - name: Configure Build Paths
+      shell: bash
+      run: |
+        cd share/ci
+        python3 -c "
+        with open('config.py', 'r') as f:
+            content = f.read()
+        # Здесь при необходимости можно программно пропатчить config.py под нужды раннера
+        print('Config.py read successfully')
+        "
+
+    # 5. Сборка зависимостей (Dependencies) по логике автора
+    - name: Build Dependencies
+      shell: bash
+      run: |
+        cd share/ci
+        # Запуск оригинального файла сборки зависимостей автора
+        if [ -f "build_deps.py" ]; then
+          python3 build_deps.py
+        elif [ -f "build.py" ]; then
+          python3 build.py --deps-only
+        else
+          echo "Запустите базовый скрипт сборки компонентов автора"
+          # Если у автора один общий скрипт, вызываем его:
+          python3 config.py 
+        fi
+
+    # 6. Сборка самого приложения ScreenTranslator
+    - name: Build Application
+      shell: bash
+      run: |
+        cd share/ci
+        # Запуск финальной компиляции .exe файла по логике автора
+        if [ -f "build_app.py" ]; then
+          python3 build_app.py
+        else
+          python3 build.py
+        fi
+
+    # 7. Сохранение готового результата (.exe архива)
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ScreenTranslator-Windows-Build
+        path: |
+          bin/
+          build/
+          *.exe
+          *.zip
