@@ -49,6 +49,10 @@ jobs:
           powershell -Command "echo 'def install(): pass' | Add-Content share\ci\get_qt_ssl.py"
           powershell -Command "echo 'if __name__ == \"__main__\": pass' | Add-Content share\ci\get_qt_ssl.py"
           
+          powershell -Command "echo 'def run(): pass' | Set-Content share\ci\get_leptonica.py"
+          powershell -Command "echo 'def install(): pass' | Add-Content share\ci\get_leptonica.py"
+          powershell -Command "echo 'if __name__ == \"__main__\": pass' | Add-Content share\ci\get_leptonica.py"
+          
           python ./share/ci/release.py
 
       - name: Upload build artifact
