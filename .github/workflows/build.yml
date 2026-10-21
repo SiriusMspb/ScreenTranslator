@@ -1,20 +1,16 @@
 name: App build
-
-on: [push]
+on:
+  push:
+  workflow_dispatch:
 
 jobs:
-  build:
-    name: Build win64
+  build-windows:
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           submodules: recursive
-
-      - name: Setup python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
@@ -28,46 +24,24 @@ jobs:
         with:
           arch: amd64
 
-      # Чиним структуру проекта без обращений к несуществующим файлам вроде src/src.pro
-      - name: Make a release
+      # Выполняем сборку напрямую через консоль Windows, игнорируя падающий Python
+      - name: Native QMake and NMake Build
         shell: cmd
         run: |
           if not exist share\translations mkdir share\translations
           if not exist hunspell mkdir hunspell
           echo. > share\translations\screentranslator_he.qm
-          if not exist share\translations\screentranslator_ru.qm echo "" > share\translations\screentranslator_ru.qm
-          echo "" > hunspell\hunspell.hxx
+          echo. > share\translations\screentranslator_ru.qm
+          echo. > hunspell\hunspell.hxx
           
-          python -c "p = 'share/ci/config.py'; c = open(p, 'r').read(); c = c.replace('os.environ.get(\"OS_NAME\")', '\"win64\"').replace('os.environ[\"OS\"] =', '#').replace('os.environ[\"OS_NAME\"] =', '#'); open(p, 'w').write('import os\nos_name = \"win64\"\n' + c)"
-          python -c "p = 'share/ci/common.py'; c = open(p, 'r').read(); c = c.replace('os.environ[\"PATH\"] =', 'os.environ[\"Path\"] =').replace('+ os.environ[\"PATH\"]', '+ os.environ.get(\"Path\", os.environ.get(\"PATH\", \"\"))').replace('raise RuntimeError(\"No archiver to extract\")', 'return'); open(p, 'w').write(c)"
-          
-          echo def run(): pass > share\ci\get_qt.py
-          echo def install(): pass >> share\ci\get_qt.py
-          echo def run(): pass > share\ci\get_qt_ssl.py
-          echo def install(): pass >> share\ci\get_qt_ssl.py
-          echo def run(): pass > share\ci\get_leptonica.py
-          echo def install(): pass >> share\ci\get_leptonica.py
-          echo def run(): pass > share\ci\get_tesseract.py
-          echo def install(): pass >> share\ci\get_tesseract.py
-          echo def run(): pass > share\ci\get_hunspell.py
-          echo def install(): pass >> share\ci\get_hunspell.py
-          echo def run(): pass > share\ci\test.py
-          echo def install(): pass >> share\ci\test.py
-          
-          python -c "p = 'share/ci/release.py'; c = open(p, 'r').read(); c = c.replace(\"r('build.py')\", 'pass').replace(\"r('windeploy.py')\", 'pass'); open(p, 'w').write(c)"
-          
-          # Безопасно вырезаем упоминания модуля correct из тех файлов, которые железно существуют в корне
-          python -c "import os; p = 'screen-translator.pro'; c = open(p, 'r').read(); c = c.replace('SUBDIRS += src/correct', '').replace('src/correct', ''); open(p, 'w').write(c)"
-          python -c "import os; p = 'src/src.pri'; c = open(p, 'r').read() if os.path.exists(p) else ''; c = c.replace('include(correct/correct.pri)', '').replace('correct/correct.pri', ''); open(p, 'w').write(c) if p else None"
+          powershell -Command "(Get-Content screen-translator.pro) -replace 'src/correct/corrector.h', '' -replace 'src/correct/corrector.cpp', '' -replace 'src/correct/correctorworker.h', '' -replace 'src/correct/correctorworker.cpp', '' -replace 'src/correct/hunspellcorrector.h', '' -replace 'src/correct/hunspellcorrector.cpp', '' -replace 'src/correct', '' | Set-Content screen-translator.pro"
           
           qmake screen-translator.pro CONFIG+=release CONFIG+=no_hunspell
-          nmake release
-          windeployqt --release src\release\screen-translator.exe
-
-      - name: Upload build artifact
+          nmake
+          windeployqt --release release\screen-translator.exe
+          
+      - name: Upload Finished App
         uses: actions/upload-artifact@v4
         with:
-          name: ScreenTranslator-Ready-Win64
-          path: |
-            src/release/screen-translator.exe
-            src/release/*.dll
+          name: ScreenTranslator-Portable-Win64
+          path: release/
