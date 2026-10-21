@@ -61,6 +61,10 @@ jobs:
           powershell -Command "echo 'def install(): pass' | Add-Content share\ci\get_hunspell.py"
           powershell -Command "echo 'if __name__ == \"__main__\": pass' | Add-Content share\ci\get_hunspell.py"
           
+          powershell -Command "echo 'def run(): pass' | Set-Content share\ci\test.py"
+          powershell -Command "echo 'def install(): pass' | Add-Content share\ci\test.py"
+          powershell -Command "echo 'if __name__ == \"__main__\": pass' | Add-Content share\ci\test.py"
+          
           python ./share/ci/release.py
 
       - name: Upload build artifact
