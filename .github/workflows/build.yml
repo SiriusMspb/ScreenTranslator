@@ -17,6 +17,7 @@ jobs:
           host: 'windows'
           target: 'desktop'
           arch: 'win64_mingw81'
+          modules: 'qtwebengine'
 
       - name: Configure and Build
         shell: cmd
