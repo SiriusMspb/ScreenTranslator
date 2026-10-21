@@ -10,14 +10,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Qt via Choco
-        run: |
-          choco install qt5-default -y
+      - name: Setup Qt and MinGW
+        uses: davidmace/setup-qt@v1
+        with:
+          qt-version: '5.15.2'
+          qt-modules: 'qtwebengine'
 
       - name: Configure and Build
         shell: cmd
         run: |
-          set PATH=C:\tools\Qt\5.15.2\mingw81_64\bin;C:\tools\Qt\5.15.2\mingw81_64\bin\..;%PATH%
           qmake screen-translator.pro
           mingw32-make
           
