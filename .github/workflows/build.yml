@@ -28,7 +28,7 @@ jobs:
         with:
           arch: amd64
 
-      # Физически заменяем файлы через базовые команды эхо, полностью исключив powershell и его ошибки кавычек
+      # Исправили экранирование кавычек внутри Python-скрипта автозамены
       - name: Make a release
         shell: cmd
         run: |
@@ -38,21 +38,9 @@ jobs:
           echo. > share\translations\screentranslator_ru.qm
           echo. > hunspell\hunspell.hxx
           
-          echo import os > share\ci\config.py
-          echo os_name = "win64" >> share\ci\config.py
-          echo app_version = "3.3.0" >> share\ci\config.py
-          echo pr_dir = "." >> share\ci\config.py
-          echo qt_dir = "." >> share\ci\config.py
-          echo msvc_dir = "." >> share\ci\config.py
+          python -c "p = 'share/ci/config.py'; c = open(p, 'r').read(); c = c.replace('os.environ.get(\"OS_NAME\")', '\"win64\"').replace('os.environ[\"OS\"]', '\"win64\"'); open(p, 'w').write('import os\nos_name = \"win64\"\nos.environ[\"OS\"] = \"win64\"\nos.environ[\"OS_NAME\"] = \"win64\"\n' + c)"
           
-          echo def apply_cmd_env(cmd_env): > share\ci\common.py
-          echo     import os >> share\ci\common.py
-          echo     for k, v in cmd_env.items(): os.environ[k] = v >> share\ci\common.py
-          echo def add_to_path(entry): >> share\ci\common.py
-          echo     import os >> share\ci\common.py
-          echo     os.environ["Path"] = entry + ";" + os.environ.get("Path", "") >> share\ci\common.py
-          echo def extract(src, dest): >> share\ci\common.py
-          echo     return >> share\ci\common.py
+          python -c "p = 'share/ci/common.py'; c = open(p, 'r').read(); c = c.replace('os.environ[\"PATH\"] =', 'os.environ[\"Path\"] =').replace('+ os.environ[\"PATH\"]', '+ os.environ.get(\"Path\", os.environ.get(\"PATH\", \"\"))').replace('raise RuntimeError(\"No archiver to extract\")', 'return'); open(p, 'w').write(c)"
           
           echo def run(): pass > share\ci\get_qt.py
           echo def install(): pass >> share\ci\get_qt.py
