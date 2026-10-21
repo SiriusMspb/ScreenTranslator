@@ -30,6 +30,10 @@ jobs:
 
       - name: Make a release
         shell: cmd
+        env:
+          ComSpec: C:\Windows\system32\cmd.exe
+          SystemRoot: C:\Windows
+          WINDIR: C:\Windows
         run: |
           if not exist share\translations mkdir share\translations
           if not exist hunspell mkdir hunspell
