@@ -10,25 +10,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: '5.15.2'
-          host: 'windows'
-          target: 'desktop'
-          arch: 'win64_mingw81'
-          modules: 'qtwebengine'
+      - name: Install Qt via Choco
+        run: |
+          choco install qt5-default -y
 
       - name: Configure and Build
         shell: cmd
         run: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           qmake screen-translator.pro
-          mingw32-make
+          nmake
 
       - name: Upload Finished App
         uses: actions/upload-artifact@v4
