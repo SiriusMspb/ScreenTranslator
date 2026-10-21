@@ -1,16 +1,20 @@
 name: App build
-on:
-  push:
-  workflow_dispatch:
+
+on: [push]
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  build:
+    name: Build win64
+    runs-on: windows-2022
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
@@ -23,32 +27,20 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64
-          toolset: '14.29'
 
-      - name: Download Tesseract & Leptonica Libraries
+      - name: Make a release
         shell: bash
         run: |
-          mkdir -p deps/include deps/lib share/translations hunspell
-          curl -L -o tesseract-deps.zip https://github.com || echo "No prebuilt deps found"
-          touch deps/lib/tesseract.lib deps/lib/leptonica.lib deps/lib/hunspell.lib
+          mkdir -p share/translations hunspell
+          echo. > share/translations/screentranslator_he.qm
+          echo. > share/translations/screentranslator_ru.qm
+          echo. > hunspell/hunspell.hxx
+          python ./share/ci/release.py
+          echo "artifact=`python ./share/ci/release.py artifact_name`" >> \$GITHUB_ENV
 
-      - name: Patch Project File and Build
-        shell: cmd
-        run: |
-          if not exist share\translations mkdir share\translations
-          if not exist hunspell mkdir hunspell
-          echo. > share\translations\screentranslator_he.qm
-          echo. > share\translations\screentranslator_ru.qm
-          echo. > hunspell\hunspell.hxx
-          
-          powershell -Command "(Get-Content screen-translator.pro) -replace 'src/correct/corrector.h', '' -replace 'src/correct/corrector.cpp', '' -replace 'src/correct/correctorworker.h', '' -replace 'src/correct/correctorworker.cpp', '' -replace 'src/correct/hunspellcorrector.h', '' -replace 'src/correct/hunspellcorrector.cpp', '' -replace 'src/correct', '' | Set-Content screen-translator.pro"
-          
-          qmake screen-translator.pro CONFIG+=release
-          nmake
-          windeployqt --release release\screen-translator.exe
-          
-      - name: Upload Finished App
+      - name: Upload build artifact
+        if: env.artifact != ''
         uses: actions/upload-artifact@v4
         with:
-          name: ScreenTranslator-Portable
-          path: release/
+          name: \${{ env.artifact }}
+          path: ./\${{ env.artifact }}
