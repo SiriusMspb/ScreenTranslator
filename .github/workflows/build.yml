@@ -24,14 +24,14 @@ jobs:
         with:
           arch: amd64
 
-      # Создаем структуру папок и пустые файлы-заглушки, чтобы обмануть проверку зависимостей в nmake
+      # Добавили CONFIG+=no_hunspell, чтобы отключить отсутствующую библиотеку проверки орфографии
       - name: Configure, Build and Deploy
         shell: cmd
         run: |
           if not exist share\translations mkdir share\translations
           echo "" > share\translations\screentranslator_he.qm
           echo "" > share\translations\screentranslator_ru.qm
-          qmake screen-translator.pro CONFIG+=release
+          qmake screen-translator.pro CONFIG+=release CONFIG+=no_hunspell
           nmake
           windeployqt --release release\screen-translator.exe
           
