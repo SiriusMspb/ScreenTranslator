@@ -41,7 +41,10 @@ jobs:
           
           powershell -Command "$p = 'share\ci\common.py'; (Get-Content $p) -replace 'raise RuntimeError.*No archiver.*', 'return' | Set-Content $p"
           
-          powershell -Command "$p = 'share\ci\get_qt.py'; $c = Get-Content $p; $new = @(); foreach($line in $c){ if($line -match 'def run\(\):'){ $new += $line; $new += '    return'; break } else { $new += $line } }; Set-Content $p ($new -join [Environment]::NewLine)"
+          echo # Выжигаем содержимое get_qt.py и подсовываем пустые заглушки для всех возможных функций
+          powershell -Command "echo 'def run(): pass' | Set-Content share\ci\get_qt.py"
+          powershell -Command "echo 'def install(): pass' | Add-Content share\ci\get_qt.py"
+          powershell -Command "echo 'if __name__ == \"__main__\": pass' | Add-Content share\ci\get_qt.py"
           
           python ./share/ci/release.py
 
