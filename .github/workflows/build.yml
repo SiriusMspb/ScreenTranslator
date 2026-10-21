@@ -41,7 +41,7 @@ jobs:
           
           powershell -Command "$p = 'share\ci\common.py'; (Get-Content $p) -replace 'raise RuntimeError.*No archiver.*', 'return' | Set-Content $p"
           
-          powershell -Command "$p = 'share\ci\get_qt.py'; $c = Get-Content $p; $new = @(); $skip = $false; foreach($line in $c){ if($line -match 'with open\(config_name'){ $new += '    return'; $skip = $true }; if($skip -and $line -match '^\s*$'){ $skip = $false }; if(-not $skip){ $new += $line } }; Set-Content $p ($new -join [Environment]::NewLine)"
+          powershell -Command "$p = 'share\ci\get_qt.py'; $c = Get-Content $p; $new = @(); foreach($line in $c){ if($line -match 'def run\(\):'){ $new += $line; $new += '    return'; break } else { $new += $line } }; Set-Content $p ($new -join [Environment]::NewLine)"
           
           python ./share/ci/release.py
 
