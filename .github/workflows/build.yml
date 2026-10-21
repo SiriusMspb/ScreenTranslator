@@ -28,7 +28,6 @@ jobs:
         with:
           arch: amd64
 
-       Zorv
       - name: Make a release
         shell: cmd
         run: |
