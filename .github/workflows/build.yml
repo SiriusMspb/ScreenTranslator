@@ -36,8 +36,10 @@ jobs:
           if not exist share\translations mkdir share\translations
           if not exist hunspell mkdir hunspell
           echo "" > share\translations\screentranslator_he.qm
-          echo "" > share\translations\screentranslator_ru.qm
+          if not exist share\translations\screentranslator_ru.qm echo "" > share\translations\screentranslator_ru.qm
           echo "" > hunspell\hunspell.hxx
+          
+          powershell -Command "(Get-Content share\ci\config.py) -replace 'os.environ\[.*OS.*\]', '\"win64\"' | Set-Content share\ci\config.py"
           
           python ./share/ci/release.py
           
