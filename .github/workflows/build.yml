@@ -15,6 +15,14 @@ jobs:
       with:
         submodules: recursive
 
+    - name: Setup python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
       with:
@@ -23,26 +31,22 @@ jobs:
         target: 'desktop'
         arch: 'win64_msvc2019_64'
 
-    # Этот готовый шаг автоматически и без багов включает компилятор MSVC и nmake в систему
-    - name: Set up MSVC Developer Command Prompt
-      uses: ilammy/msvc-dev-cmd@v1
-      with:
-        arch: amd64
-
-    - name: Run QMake
+    - name: Make a release
       shell: cmd
       run: |
-        qmake screen-translator.pro CONFIG+=release
-
-    - name: Run NMake Compile
-      shell: cmd
-      run: |
-        nmake
+        cd share\ci
+        
+        :: Микро-патч: заменяем проблемный вызов os.environ['OS'] на строку 'Windows_NT' прямо в коде автора
+        python -c "import pathlib; p = pathlib.Path('config.py'); t = p.read_text(encoding='utf-8'); t = t.replace('os.environ.get(\'OS\')', '\'Windows_NT\'').replace('os.environ[\'OS\']', '\'Windows_NT\''); p.write_text(t, encoding='utf-8')"
+        
+        :: Запуск оригинальной логики автора
+        python config.py
+        python build.py
         
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
       with:
         name: ScreenTranslator-Fixed-Win64
         path: |
-          release/screen-translator.exe
-          release/*.dll
+          share/ci/release/screen-translator.exe
+          share/ci/release/*.dll
