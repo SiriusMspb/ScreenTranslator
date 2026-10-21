@@ -1,44 +1,50 @@
 name: App build
 on:
-push:
-workflow_dispatch:
+  push:
+  workflow_dispatch:
+
 jobs:
-build-windows:
-runs-on: windows-2022
-steps:
-- name: Checkout code
-uses: actions/checkout@v4
-with:
-submodules: recursive
-- name: Install Qt
-uses: jurplel/install-qt-action@v3
-with:
-version: '5.15.2'
-arch: 'win64_msvc2019_64'
-modules: 'qtwebengine'
-- name: Setup MSVC Compiler
-uses: ilammy/msvc-dev-cmd@v1
-with:
-arch: amd64
-- name: Download Tesseract & Leptonica Libraries
-shell: bash
-run: |
-mkdir -p deps/include deps/lib share/translations hunspell
-curl -L -o tesseract-deps.zip github.com || echo "No prebuilt deps found"
-touch deps/lib/tesseract.lib deps/lib/leptonica.lib deps/lib/hunspell.lib
-- name: Patch Project File and Build
-shell: cmd
-run: |
-if not exist share\translations mkdir share\translations
-if not exist hunspell mkdir hunspell
-echo. > share\translations\screentranslator_he.qm
-echo. > share\translations\screentranslator_ru.qm
-echo. > hunspell\hunspell.hxx
-qmake screen-translator.pro CONFIG+=release
-nmake
-windeployqt --release release\screen-translator.exe
-- name: Upload Finished App
-uses: actions/upload-artifact@v4
-with:
-name: ScreenTranslator-Portable
-path: release/
+  build-windows:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '5.15.2'
+          arch: 'win64_msvc2019_64'
+          modules: 'qtwebengine'
+
+      - name: Setup MSVC Compiler
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
+
+      - name: Download Tesseract & Leptonica Libraries
+        shell: bash
+        run: |
+          mkdir -p deps/include deps/lib share/translations hunspell
+          curl -L -o tesseract-deps.zip https://github.com || echo "No prebuilt deps found"
+          touch deps/lib/tesseract.lib deps/lib/leptonica.lib deps/lib/hunspell.lib
+
+      - name: Patch Project File and Build
+        shell: cmd
+        run: |
+          if not exist share\translations mkdir share\translations
+          if not exist hunspell mkdir hunspell
+          echo. > share\translations\screentranslator_he.qm
+          echo. > share\translations\screentranslator_ru.qm
+          echo. > hunspell\hunspell.hxx
+          qmake screen-translator.pro CONFIG+=release
+          nmake
+          windeployqt --release release\screen-translator.exe
+          
+      - name: Upload Finished App
+        uses: actions/upload-artifact@v4
+        with:
+          name: ScreenTranslator-Portable
+          path: release/
